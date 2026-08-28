@@ -4,10 +4,10 @@
 # ///
 """Charts for the P4 landesorg playlist.
 
-Run:  uv run visualize.py [playlist.json]
+Run:  uv run visualize.py [playlist.csv]
 Out:  charts/*.png (lys) og charts/dark/*.png (mørk)
 """
-import json
+import csv
 import sys
 from collections import Counter
 from datetime import datetime, timedelta
@@ -49,8 +49,9 @@ set_theme("light")
 
 def load(path):
     """-> list of (local datetime, artist, title), chronological."""
-    rows = [(datetime.fromisoformat(s["startTime"].replace("Z", "+00:00")).astimezone(OSLO),
-             s["artist"], s["title"]) for s in json.load(open(path, encoding="utf-8"))]
+    with open(path, encoding="utf-8", newline="") as f:
+        rows = [(datetime.strptime(r["time_oslo"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=OSLO),
+                 r["artist"], r["title"]) for r in csv.DictReader(f)]
     return sorted(rows)
 
 
@@ -175,7 +176,7 @@ def airtime(rows, out):
 
 
 def main():
-    src = Path(sys.argv[1] if len(sys.argv) > 1 else "p4-2026-08-28-0830-2100.json")
+    src = Path(sys.argv[1] if len(sys.argv) > 1 else "p4-2026-08-28-0830-2100.csv")
     rows = load(src)
     for theme in THEMES:
         set_theme(theme)
